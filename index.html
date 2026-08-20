@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panjat Pinang IPS - Letak & Luas Indonesia</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                        nunito: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        oceanDark: '#0f172a',
+                        oceanBlue: '#0284c7',
+                        oceanLight: '#e0f2fe',
+                        tropicalGreen: '#10b981',
+                        nusantaraRed: '#dc2626',
+                        goldAccent: '#f59e0b',
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 25px -5px rgba(0, 0, 0, 0.08)',
+                        'glow-teal': '0 0 20px rgba(20, 184, 166, 0.4)',
+                        'glow-red': '0 0 20px rgba(220, 38, 38, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* Tropical Ocean Gradient */
+        .bg-nusantara-gradient {
+            background: linear-gradient(135deg, #0284c7 0%, #0d9488 40%, #059669 100%);
+        }
+
+        .bg-card-glass {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+        }
+
+        /* Custom animation for climbing */
+        @keyframes climbBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-10px) scale(1.08); }
+        }
+
+        .climb-anim {
+            animation: climbBounce 0.4s ease-in-out;
+        }
+
+        /* Flag wave animation */
+        @keyframes flagWave {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .flag-wave {
+            animation: flagWave 2s ease-in-out infinite;
+            transform-origin: left center;
+        }
+
+        .btn-press:active {
+            transform: scale(0.96);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0d9488;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-nusantara-gradient min-h-screen text-slate-800 flex flex-col justify-between overflow-x-hidden selection:bg-teal-200">
+
+    <!-- Sound Effects Engine (Web Audio API) -->
+    <script>
+        class SoundEffects {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playTap() {
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(450, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(850, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.08);
+            }
+
+            playCorrect() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.22);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.22);
+                });
+            }
+
+            playWrong() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(110, now + 0.28);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.28);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.28);
+            }
+
+            playWin() {
+                this.init();
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const melody = [
+                    {f: 523.25, d: 0.15}, {f: 659.25, d: 0.15}, {f: 783.99, d: 0.15},
+                    {f: 1046.50, d: 0.4}, {f: 880.00, d: 0.2}, {f: 1046.50, d: 0.6}
+                ];
+                let time = now;
+                melody.forEach((note) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(note.f, time);
+                    gain.gain.setValueAtTime(0.25, time);
+                    gain.gain.exponentialRampToValueAtTime(0.001, time + note.d);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(time);
+                    osc.stop(time + note.d);
+                    time += note.d * 0.9;
+                });
+            }
+        }
+
+        const sfx = new SoundEffects();
+    </script>
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="w-full max-w-6xl mx-auto px-4 pt-4 flex justify-between items-center z-10">
+        <div class="flex items-center gap-3 bg-white/20 backdrop-blur-md border border-white/30 px-4 py-2 rounded-2xl shadow-sm">
+            <span class="text-3xl">🇮🇩</span>
+            <div>
+                <span class="font-extrabold text-lg sm:text-2xl text-white tracking-wide block leading-none">Panjat Pinang IPS</span>
+                <span class="text-[11px] font-bold text-amber-200">Letak & Luas Indonesia</span>
+            </div>
+        </div>
+        <div id="topModeBadge" class="hidden bg-white/90 backdrop-blur border border-teal-200 px-4 py-1.5 rounded-full text-xs sm:text-sm font-extrabold text-teal-800 shadow-sm">
+            <!-- Dynamic Badge -->
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="w-full max-w-6xl mx-auto px-2 sm:px-4 py-4 flex-1 flex flex-col justify-center items-center">
+
+        <!-- ================= 1️⃣ PAGE: CATEGORY SELECTION ================= -->
+        <section id="pageCategories" class="w-full max-w-3xl flex flex-col items-center text-center space-y-6 my-auto py-4">
+            <div class="space-y-2">
+                <div class="inline-block bg-amber-400 text-slate-900 px-4 py-1 rounded-full text-xs sm:text-sm font-black tracking-wider shadow-sm uppercase">
+                    🏆 Kuis Edukasi Geografi Indonesia SMP/MTs
+                </div>
+                <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight drop-shadow-md">
+                    Panjat Pinang <span class="text-amber-300">IPS Nusantara</span>
+                </h1>
+                <p class="text-base sm:text-lg font-bold text-teal-100 max-w-lg mx-auto">
+                    Jawab pertanyaan tentang letak astronomis, geografis, geologis & luas Indonesia untuk memanjat tiang!
+                </p>
+            </div>
+
+            <!-- Mode Selector Switcher (1 Player vs Bot or 2 Players) -->
+            <div class="bg-slate-900/40 backdrop-blur p-1.5 rounded-2xl border border-white/20 flex gap-1 w-full max-w-xs shadow-inner">
+                <button id="btnVsBot" onclick="setGameMode('vsBot')" class="flex-1 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-amber-400 text-slate-900 shadow-md">
+                    👤 vs Bot AI 🤖
+                </button>
+                <button id="btnVsPlayer" onclick="setGameMode('vsPlayer')" class="flex-1 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-white hover:text-amber-300">
+                    👥 2 Pemain (VS)
+                </button>
+            </div>
+
+            <!-- 4 IPS Category Buttons Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full px-2">
+                <!-- Topik 1 -->
+                <button onclick="selectCategory('astronomis')" 
+                    class="btn-press bg-card-glass hover:bg-white text-slate-800 p-5 rounded-[28px] shadow-lg transition-all duration-300 flex items-center gap-4 text-left group border border-white/80">
+                    <div class="w-14 h-14 bg-sky-500/20 text-sky-600 rounded-2xl flex items-center justify-center text-3xl font-black group-hover:scale-110 transition-transform">
+                        🌐
+                    </div>
+                    <div>
+                        <div class="text-xl font-black text-slate-800">Letak Astronomis</div>
+                        <div class="text-xs text-slate-500 font-bold">Garis bujur, lintang, & 3 zona waktu</div>
+                    </div>
+                </button>
+
+                <!-- Topik 2 -->
+                <button onclick="selectCategory('geografis')" 
+                    class="btn-press bg-card-glass hover:bg-white text-slate-800 p-5 rounded-[28px] shadow-lg transition-all duration-300 flex items-center gap-4 text-left group border border-white/80">
+                    <div class="w-14 h-14 bg-teal-500/20 text-teal-600 rounded-2xl flex items-center justify-center text-3xl font-black group-hover:scale-110 transition-transform">
+                        🗺️
+                    </div>
+                    <div>
+                        <div class="text-xl font-black text-slate-800">Letak Geografis</div>
+                        <div class="text-xs text-slate-500 font-bold">Posisi silang 2 benua & 2 samudera</div>
+                    </div>
+                </button>
+
+                <!-- Topik 3 -->
+                <button onclick="selectCategory('geologis')" 
+                    class="btn-press bg-card-glass hover:bg-white text-slate-800 p-5 rounded-[28px] shadow-lg transition-all duration-300 flex items-center gap-4 text-left group border border-white/80">
+                    <div class="w-14 h-14 bg-rose-500/20 text-rose-600 rounded-2xl flex items-center justify-center text-3xl font-black group-hover:scale-110 transition-transform">
+                        🌋
+                    </div>
+                    <div>
+                        <div class="text-xl font-black text-slate-800">Letak Geologis & Laut</div>
+                        <div class="text-xs text-slate-500 font-bold">Lempeng tektonik, gunung & maritim</div>
+                    </div>
+                </button>
+
+                <!-- Topik 4 -->
+                <button onclick="selectCategory('campuran')" 
+                    class="btn-press bg-card-glass hover:bg-white text-slate-800 p-5 rounded-[28px] shadow-lg transition-all duration-300 flex items-center gap-4 text-left group border border-white/80">
+                    <div class="w-14 h-14 bg-amber-500/20 text-amber-600 rounded-2xl flex items-center justify-center text-3xl font-black group-hover:scale-110 transition-transform">
+                        🔀
+                    </div>
+                    <div>
+                        <div class="text-xl font-black text-slate-800">Semua Topik (Acak)</div>
+                        <div class="text-xs text-slate-500 font-bold">Uji pemahaman komprehensif</div>
+                    </div>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ================= 2️⃣ PAGE: DIFFICULTY / SPEED LEVEL ================= -->
+        <section id="pageLevels" class="hidden w-full max-w-lg flex flex-col items-center text-center space-y-6 my-auto py-6">
+            <div class="bg-card-glass p-6 sm:p-8 rounded-[36px] shadow-2xl border border-white/80 w-full flex flex-col items-center">
+                <div class="space-y-1 mb-6">
+                    <h2 class="text-2xl sm:text-3xl font-black text-slate-800">Pilih Tingkat Kesulitan</h2>
+                    <div class="text-xs font-bold text-teal-800 bg-teal-100 px-4 py-1 rounded-full inline-block">
+                        Materi: <span id="lblSelectedCat">Letak Astronomis</span>
+                    </div>
+                </div>
+
+                <!-- 3 Level Buttons -->
+                <div class="flex flex-col gap-3.5 w-full">
+                    <button onclick="selectLevel('pemula')" 
+                        class="btn-press bg-emerald-500 hover:bg-emerald-600 text-white p-4 rounded-2xl shadow-md transition-all flex items-center justify-between group">
+                        <div class="flex items-center gap-3 text-left">
+                            <div class="text-2xl bg-white/20 p-2.5 rounded-xl">🌱</div>
+                            <div>
+                                <div class="text-lg font-black">Pemula</div>
+                                <div class="text-xs text-emerald-100 font-bold">Kecepatan Bot Santai (5 Detik)</div>
+                            </div>
+                        </div>
+                        <div class="text-amber-300 font-black">⭐</div>
+                    </button>
+
+                    <button onclick="selectLevel('cendekia')" 
+                        class="btn-press bg-amber-500 hover:bg-amber-600 text-white p-4 rounded-2xl shadow-md transition-all flex items-center justify-between group">
+                        <div class="flex items-center gap-3 text-left">
+                            <div class="text-2xl bg-white/20 p-2.5 rounded-xl">⚡</div>
+                            <div>
+                                <div class="text-lg font-black">Cendekia</div>
+                                <div class="text-xs text-amber-100 font-bold">Kecepatan Bot Sedang (3.5 Detik)</div>
+                            </div>
+                        </div>
+                        <div class="text-amber-200 font-black">⭐⭐</div>
+                    </button>
+
+                    <button onclick="selectLevel('ahli')" 
+                        class="btn-press bg-rose-600 hover:bg-rose-700 text-white p-4 rounded-2xl shadow-md transition-all flex items-center justify-between group">
+                        <div class="flex items-center gap-3 text-left">
+                            <div class="text-2xl bg-white/20 p-2.5 rounded-xl">🏆</div>
+                            <div>
+                                <div class="text-lg font-black">Ahli Geografi</div>
+                                <div class="text-xs text-rose-100 font-bold">Tantangan Cepat (2.5 Detik)</div>
+                            </div>
+                        </div>
+                        <div class="text-amber-300 font-black">⭐⭐⭐</div>
+                    </button>
+                </div>
+
+                <!-- Back Button -->
+                <button onclick="showPage('pageCategories')" 
+                    class="btn-press mt-6 bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2 rounded-xl text-xs font-black flex items-center gap-2">
+                    ← Kembali
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ================= 3️⃣ PAGE: GAMEPLAY ARENA ================= -->
+        <section id="pageGameplay" class="hidden w-full flex flex-col items-center space-y-3">
+            
+            <!-- Game Arena Grid -->
+            <div class="w-full bg-card-glass rounded-[32px] shadow-2xl border border-white/80 p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                
+                <!-- PLAYER 1 AREA (Left Column - Red Team) -->
+                <div class="lg:col-span-4 flex flex-col items-center bg-rose-50/90 p-3 sm:p-4 rounded-[24px] border border-rose-200 shadow-inner">
+                    <div class="flex items-center justify-between w-full mb-2">
+                        <span class="text-xs font-black tracking-wider text-rose-700 bg-rose-200/80 px-3 py-1 rounded-full flex items-center gap-1">
+                            🔴 PEMAIN 1
+                        </span>
+                        <span class="text-xs font-extrabold text-slate-600">Panjatan: <strong id="p1Counter" class="text-rose-600 text-sm sm:text-base">0/6</strong></span>
+                    </div>
+
+                    <!-- Question Card P1 -->
+                    <div class="bg-white w-full rounded-2xl p-3 text-center border border-rose-100 shadow-sm mb-3 min-h-[90px] flex flex-col justify-center">
+                        <div class="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-1">PERTANYAAN IPS</div>
+                        <div id="p1QuestionText" class="text-sm sm:text-base font-black text-slate-800 leading-snug">
+                            Loading pertanyaan...
+                        </div>
+                    </div>
+
+                    <!-- 4 Multiple Choice Options P1 -->
+                    <div id="p1OptionsContainer" class="flex flex-col gap-2 w-full">
+                        <!-- Dynamic Buttons -->
+                    </div>
+
+                    <!-- Edu-Fact Feedback Banner P1 -->
+                    <div id="p1EduFact" class="hidden mt-3 bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-left text-xs text-slate-700 font-bold">
+                        <span class="text-amber-800 font-black block">💡 FAKTA IPS:</span>
+                        <span id="p1FactText">...</span>
+                    </div>
+                </div>
+
+
+                <!-- CENTER AREA: DUAL TIANG PINANG GRAPHICS -->
+                <div class="lg:col-span-4 flex flex-col items-center justify-center relative min-h-[380px] sm:min-h-[430px] bg-gradient-to-b from-sky-200 via-teal-100 to-emerald-200 rounded-[24px] overflow-hidden border border-teal-300 shadow-inner px-2 py-3">
+                    
+                    <!-- Top Flag & Crossbar Assembly -->
+                    <div class="w-full flex justify-center items-center relative z-10 -mt-1">
+                        <svg class="w-full max-w-[280px] h-20" viewBox="0 0 300 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Indonesian Flag Peak Center -->
+                            <g class="flag-wave" transform="translate(135, 2)">
+                                <rect x="0" y="0" width="30" height="10" fill="#DC2626" rx="1"/>
+                                <rect x="0" y="10" width="30" height="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="0.5" rx="1"/>
+                                <line x1="0" y1="0" x2="0" y2="35" stroke="#334155" stroke-width="2.5" stroke-linecap="round"/>
+                            </g>
+
+                            <!-- Circular Wooden Crossbar -->
+                            <ellipse cx="150" cy="42" rx="120" ry="12" fill="#78350F" stroke="#451A03" stroke-width="3"/>
+                            
+                            <!-- Hanging IPS Prizes -->
+                            <!-- Peta / Globe -->
+                            <g transform="translate(45, 48)">
+                                <line x1="10" y1="0" x2="10" y2="12" stroke="#64748b" stroke-width="1.5"/>
+                                <circle cx="10" cy="22" r="9" fill="#0284c7"/>
+                                <path d="M 5 22 Q 10 16 15 22" stroke="#10b981" stroke-width="2" fill="none"/>
+                            </g>
+                            <!-- Trofi -->
+                            <g transform="translate(100, 48)">
+                                <line x1="8" y1="0" x2="8" y2="12" stroke="#64748b" stroke-width="1.5"/>
+                                <path d="M 2 12 L 14 12 L 12 24 L 4 24 Z" fill="#F59E0B"/>
+                                <rect x="6" y="24" width="4" height="6" fill="#78350F"/>
+                            </g>
+                            <!-- Buku IPS -->
+                            <g transform="translate(180, 48)">
+                                <line x1="10" y1="0" x2="10" y2="12" stroke="#64748b" stroke-width="1.5"/>
+                                <rect x="2" y="12" width="16" height="18" fill="#DC2626" rx="2"/>
+                                <rect x="5" y="15" width="10" height="2" fill="#FFFFFF"/>
+                                <rect x="5" y="19" width="7" height="2" fill="#FFFFFF"/>
+                            </g>
+                            <!-- Sepeda -->
+                            <g transform="translate(235, 48)">
+                                <line x1="10" y1="0" x2="10" y2="12" stroke="#64748b" stroke-width="1.5"/>
+                                <circle cx="5" cy="24" r="5" fill="#334155"/>
+                                <circle cx="17" cy="24" r="5" fill="#334155"/>
+                                <path d="M 5 24 L 11 18 L 17 24 M 11 18 L 11 14" stroke="#10B981" stroke-width="1.5"/>
+                            </g>
+                        </svg>
+                    </div>
+
+                    <!-- POLES & CLIMBERS CONTAINER -->
+                    <div class="relative w-full flex-1 flex justify-around items-end max-w-[280px] h-full pb-3">
+                        
+                        <!-- Left Pole (P1 - Red Team) -->
+                        <div class="relative flex flex-col items-center h-full justify-end w-12">
+                            <div class="w-5 h-[250px] bg-gradient-to-r from-emerald-800 via-green-600 to-emerald-900 rounded-t-lg relative border-x border-emerald-950/40">
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[16.6%]"></div>
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[33.3%]"></div>
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[50%]"></div>
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[66.6%]"></div>
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[83.3%]"></div>
+                            </div>
+                            
+                            <!-- Climber 1 Avatar -->
+                            <div id="climberP1" class="absolute left-1/2 -translate-x-1/2 transition-all duration-500 ease-out flex flex-col items-center z-20" style="bottom: 0px;">
+                                <svg class="w-11 h-13" viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="30" cy="18" r="12" fill="#FDBA74"/>
+                                    <path d="M20 16 Q30 8 40 16" stroke="#451A03" stroke-width="4" stroke-linecap="round"/>
+                                    <circle cx="26" cy="18" r="1.5" fill="#1E293B"/>
+                                    <circle cx="34" cy="18" r="1.5" fill="#1E293B"/>
+                                    <path d="M27 22 Q30 25 33 22" stroke="#C2410C" stroke-width="1.5"/>
+                                    <rect x="20" y="30" width="20" height="22" fill="#DC2626" rx="4"/>
+                                    <path d="M 20 34 C 10 30, 10 42, 20 44" stroke="#FDBA74" stroke-width="5" stroke-linecap="round"/>
+                                    <path d="M 40 34 C 50 30, 50 42, 40 44" stroke="#FDBA74" stroke-width="5" stroke-linecap="round"/>
+                                    <rect x="22" y="52" width="16" height="10" fill="#2563EB" rx="2"/>
+                                </svg>
+                                <span class="bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full -mt-1 shadow-sm">P1</span>
+                            </div>
+                        </div>
+
+                        <!-- Right Pole (P2 / Bot AI) -->
+                        <div class="relative flex flex-col items-center h-full justify-end w-12">
+                            <div class="w-5 h-[250px] bg-gradient-to-r from-emerald-800 via-green-600 to-emerald-900 rounded-t-lg relative border-x border-emerald-950/40">
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[16.6%]"></div>
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[33.3%]"></div>
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[50%]"></div>
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[66.6%]"></div>
+                                <div class="w-full h-1 bg-amber-200/40 absolute top-[83.3%]"></div>
+                            </div>
+                            
+                            <!-- Climber 2 Avatar -->
+                            <div id="climberP2" class="absolute left-1/2 -translate-x-1/2 transition-all duration-500 ease-out flex flex-col items-center z-20" style="bottom: 0px;">
+                                <svg class="w-11 h-13" viewBox="0 0 60 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="30" cy="18" r="12" fill="#FDBA74"/>
+                                    <path d="M18 16 Q30 6 42 16" stroke="#1E1B4B" stroke-width="5" stroke-linecap="round"/>
+                                    <circle cx="26" cy="18" r="1.5" fill="#1E293B"/>
+                                    <circle cx="34" cy="18" r="1.5" fill="#1E293B"/>
+                                    <path d="M27 22 Q30 25 33 22" stroke="#C2410C" stroke-width="1.5"/>
+                                    <rect x="20" y="30" width="20" height="22" fill="#0284C7" rx="4"/>
+                                    <path d="M 20 34 C 10 30, 10 42, 20 44" stroke="#FDBA74" stroke-width="5" stroke-linecap="round"/>
+                                    <path d="M 40 34 C 50 30, 50 42, 40 44" stroke="#FDBA74" stroke-width="5" stroke-linecap="round"/>
+                                    <rect x="22" y="52" width="16" height="10" fill="#DC2626" rx="2"/>
+                                </svg>
+                                <span id="lblP2Tag" class="bg-sky-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full -mt-1 shadow-sm">P2</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Ground Soil -->
+                    <div class="w-full h-4 bg-amber-900 rounded-b-2xl border-t border-amber-950 flex justify-center items-center">
+                        <span class="text-[9px] font-black text-amber-200 tracking-widest uppercase">TIANG NUSANTARA</span>
+                    </div>
+                </div>
+
+
+                <!-- PLAYER 2 / BOT AREA (Right Column - Blue Team) -->
+                <div class="lg:col-span-4 flex flex-col items-center bg-sky-50/90 p-3 sm:p-4 rounded-[24px] border border-sky-200 shadow-inner">
+                    <div class="flex items-center justify-between w-full mb-2">
+                        <span id="p2BadgeTitle" class="text-xs font-black tracking-wider text-sky-700 bg-sky-200/80 px-3 py-1 rounded-full flex items-center gap-1">
+                            🔵 PEMAIN 2
+                        </span>
+                        <span class="text-xs font-extrabold text-slate-600">Panjatan: <strong id="p2Counter" class="text-sky-600 text-sm sm:text-base">0/6</strong></span>
+                    </div>
+
+                    <!-- Question Card P2 -->
+                    <div class="bg-white w-full rounded-2xl p-3 text-center border border-sky-100 shadow-sm mb-3 min-h-[90px] flex flex-col justify-center">
+                        <div class="text-[10px] font-bold text-sky-500 uppercase tracking-widest mb-1">PERTANYAAN IPS</div>
+                        <div id="p2QuestionText" class="text-sm sm:text-base font-black text-slate-800 leading-snug">
+                            Loading pertanyaan...
+                        </div>
+                    </div>
+
+                    <!-- Options P2 (Disabled when vs Bot) -->
+                    <div id="p2OptionsContainer" class="flex flex-col gap-2 w-full">
+                        <!-- Dynamic Buttons -->
+                    </div>
+
+                    <!-- Bot Overlay Banner -->
+                    <div id="botOverlay" class="hidden w-full bg-sky-100 border border-sky-300 rounded-2xl p-4 text-center">
+                        <div class="text-3xl mb-1 animate-bounce">🤖</div>
+                        <div class="text-xs font-black text-sky-900 uppercase tracking-wide">BOT SISWA AI</div>
+                        <p id="botStatusText" class="text-xs font-bold text-sky-700 mt-1">Sedang membaca peta & soal IPS...</p>
+                    </div>
+
+                    <!-- Edu-Fact Feedback Banner P2 -->
+                    <div id="p2EduFact" class="hidden mt-3 bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-left text-xs text-slate-700 font-bold">
+                        <span class="text-amber-800 font-black block">💡 FAKTA IPS:</span>
+                        <span id="p2FactText">...</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Instruction Banner -->
+            <div class="bg-white/90 backdrop-blur px-6 py-2 rounded-full border border-teal-200 shadow-sm text-center">
+                <p class="text-xs sm:text-sm font-extrabold text-teal-900">
+                    💡 Jawab 6 soal dengan benar untuk memanjat sampai puncak tiang pinang!
+                </p>
+            </div>
+        </section>
+
+
+        <!-- ================= 4️⃣ PAGE: VICTORY & SUMMARY MODAL ================= -->
+        <section id="pageVictory" class="hidden w-full max-w-md flex flex-col items-center text-center space-y-6 my-auto py-6">
+            <div class="bg-white rounded-[36px] shadow-2xl p-6 sm:p-8 border border-white flex flex-col items-center w-full relative overflow-hidden">
+                <div class="absolute top-0 inset-x-0 h-3 bg-gradient-to-r from-rose-500 via-amber-400 to-teal-500"></div>
+
+                <div id="victoryIcon" class="text-6xl mb-2 animate-bounce">🏆</div>
+                <h2 id="victoryTitle" class="text-2xl sm:text-3xl font-black text-slate-800">PEMAIN 1 MENANG!</h2>
+                <p id="victorySubtitle" class="text-xs sm:text-sm text-slate-600 font-bold mt-1">
+                    Selamat! Kamu telah menguasai Letak dan Luas Wilayah Indonesia!
+                </p>
+
+                <!-- Score Box -->
+                <div class="bg-teal-50 border border-teal-200 rounded-2xl p-4 w-full my-5 flex justify-around items-center">
+                    <div>
+                        <div class="text-[10px] font-black text-slate-400 uppercase">Skor P1</div>
+                        <div id="finalScoreP1" class="text-2xl font-black text-rose-600">6/6</div>
+                    </div>
+                    <div class="w-px h-8 bg-teal-200"></div>
+                    <div>
+                        <div class="text-[10px] font-black text-slate-400 uppercase">Skor P2 / Bot</div>
+                        <div id="finalScoreP2" class="text-2xl font-black text-sky-600">3/6</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-2.5 w-full">
+                    <button onclick="restartGame()" class="btn-press flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded-xl text-xs sm:text-sm font-black shadow-md transition-all">
+                        🔄 Main Lagi
+                    </button>
+                    <button onclick="showPage('pageCategories')" class="btn-press flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 px-4 rounded-xl text-xs sm:text-sm font-black border border-slate-200 transition-all">
+                        🏠 Topik Lain
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="w-full text-center py-3 text-xs font-bold text-white/80">
+        Panjat Pinang IPS: Letak & Luas Indonesia &copy; Game Edukasi Nusantara
+    </footer>
+
+
+    <!-- GAME LOGIC SCRIPT -->
+    <script>
+        // IPS QUESTION BANK DATABASE
+        const ipsDatabase = {
+            astronomis: [
+                {
+                    q: "Berapakah letak astronomis wilayah Indonesia?",
+                    options: ["6°LU - 11°LS dan 95°BT - 141°BT", "6°LS - 11°LU dan 95°BB - 141°BT", "11°LU - 6°LS dan 95°BT - 141°BB", "6°LU - 11°LS dan 95°BB - 141°BB"],
+                    correct: 0,
+                    fact: "Letak astronomis membuat Indonesia berada di zona tropis dan dilintasi garis Khatulistiwa."
+                },
+                {
+                    q: "Wilayah Indonesia terbagi menjadi berapa zona waktu?",
+                    options: ["2 Zona Waktu", "3 Zona Waktu (WIB, WITA, WIT)", "4 Zona Waktu", "1 Zona Waktu"],
+                    correct: 1,
+                    fact: "Pembagian WIB, WITA, dan WIT terjadi karena wilayah Indonesia membentang dari 95°BT hingga 141°BT."
+                },
+                {
+                    q: "Kota mana di bawah ini yang berada di dalam zona Waktu Indonesia Barat (WIB)?",
+                    options: ["Makassar dan Denpasar", "Jakarta dan Medan", "Jayapura dan Ambon", "Manado dan Kupang"],
+                    correct: 1,
+                    fact: "WIB meliputi Pulau Sumatra, Jawa, Kalimantan Barat, dan Kalimantan Tengah (UTC+7)."
+                },
+                {
+                    q: "Apa akibat utama dari letak astronomis Indonesia yang berada di wilayah iklim tropis?",
+                    options: ["Memiliki 4 musim", "Mendapat sinar matahari sepanjang tahun", "Sering terjadi badai salju", "Suhu udara sangat dingin"],
+                    correct: 1,
+                    fact: "Iklim tropis membuat Indonesia hangat sepanjang tahun dengan curah hujan yang tinggi."
+                },
+                {
+                    q: "Kota Jayapura di Papua termasuk dalam zona waktu...",
+                    options: ["WITA", "WIB", "WIT (Waktu Indonesia Timur)", "UTC+7"],
+                    correct: 2,
+                    fact: "WIT memiliki selisih 2 jam lebih cepat dari WIB (UTC+9)."
+                },
+                {
+                    q: "Garis lintang 0° yang melintasi Indonesia disebut juga dengan garis...",
+                    options: ["Meridian", "Khatulistiwa (Ekuator)", "Bujur Utama", "Tropic of Capricorn"],
+                    correct: 1,
+                    fact: "Kota Pontianak di Kalimantan Barat terkenal sebagai Kota Khatulistiwa."
+                }
+            ],
+            geografis: [
+                {
+                    q: "Secara geografis, Indonesia terletak di antara dua benua, yaitu...",
+                    options: ["Asia dan Australia", "Asia dan Eropa", "Asia dan Afrika", "Amerika dan Australia"],
+                    correct: 0,
+                    fact: "Posisi di antara 2 benua menjadikan Indonesia sebagai jembatan peradaban dan ekonomi."
+                },
+                {
+                    q: "Dua samudera besar yang mengapit wilayah Indonesia adalah...",
+                    options: ["Samudera Pasifik dan Atlantik", "Samudera Hindia dan Pasifik", "Samudera Hindia dan Arktik", "Samudera Pasifik dan Antartika"],
+                    correct: 1,
+                    fact: "Letak di antara dua samudera membuat laut Indonesia kaya akan biota dan arus laut dunia."
+                },
+                {
+                    q: "Apa keuntungan utama dari posisi silang (strategis) geografis Indonesia?",
+                    options: ["Menjadi jalur lalu lintas perdagangan internasional", "Bebas dari pengaruh budaya luar", "Memiliki tanah yang selalu bersalju", "Jauh dari rute pelayaran dunia"],
+                    correct: 0,
+                    fact: "Selat Malaka dan laut Indonesia adalah rute perdagangan kapal kargo terramai di dunia."
+                },
+                {
+                    q: "Di sebelah utara, wilayah daratan Indonesia berbatasan langsung dengan negara...",
+                    options: ["Malaysia", "Australia", "Papua Nugini", "Timor Leste"],
+                    correct: 0,
+                    fact: "Indonesia berbatasan darat langsung dengan Malaysia di Pulau Kalimantan."
+                },
+                {
+                    q: "Angin muson barat yang bertiup dari Benua Asia menuju Australia menyebabkan Indonesia mengalami musim...",
+                    options: ["Kemarau", "Hujan", "Pancaroba", "Dingin"],
+                    correct: 1,
+                    fact: "Angin muson barat membawa banyak uap air dari Samudera Pasifik sehingga memicu musim hujan."
+                },
+                {
+                    q: "Selat strategis di Indonesia yang merupakan salah satu jalur pelayaran terpenting dunia adalah...",
+                    options: ["Selat Sunda", "Selat Malaka", "Selat Bali", "Selat Madura"],
+                    correct: 1,
+                    fact: "Selat Malaka menghubungkan Samudera Hindia dengan Laut China Selatan."
+                }
+            ],
+            geologis: [
+                {
+                    q: "Secara geologis, wilayah Indonesia berada di titik pertemuan tiga lempeng tektonik aktif, yaitu...",
+                    options: ["Eurasia, Indo-Australia, dan Pasifik", "Afrika, Pasifik, dan Amerika", "Eurasia, Antartika, dan Nazca", "Indo-Australia, Arab, dan Filipina"],
+                    correct: 0,
+                    fact: "Pertemuan 3 lempeng aktif ini membentuk deretan gunung api (Ring of Fire)."
+                },
+                {
+                    q: "Dampak positif dari banyaknya gunung berapi di Indonesia akibat letak geologis adalah...",
+                    options: ["Rentan banjir bandang", "Tanah menjadi sangat subur untuk pertanian", "Sering terjadi angin topan", "Suhu tanah panas sepanjang hari"],
+                    correct: 1,
+                    fact: "Abu vulkanik mengandung zat hara tinggi yang membuat tanah di Indonesia sangat subur."
+                },
+                {
+                    q: "Indonesia disebut sebagai negara Maritim karena...",
+                    options: ["Luas wilayah lautnya lebih besar dari daratan", "Sebagian besar wilayahnya berupa padang pasir", "Tidak memiliki gunung berapi", "Penduduknya sedikit"],
+                    correct: 0,
+                    fact: "Sekitar 2/3 dari total wilayah Indonesia adalah lautan (wilayah maritim)."
+                },
+                {
+                    q: "Berapa perkiraan total luas wilayah Indonesia (daratan + lautan)?",
+                    options: ["Sekitar 5,18 Juta km²", "Sekitar 1 Juta km²", "Sekitar 10 Juta km²", "Sekitar 500 Ribu km²"],
+                    correct: 0,
+                    fact: "Luas daratan sekitar 1,9 juta km² dan luas perairan mencapai 3,2 juta km²."
+                },
+                {
+                    q: "Jalur pegunungan lipatan muda yang melalui wilayah Indonesia barat adalah...",
+                    options: ["Sirkum Mediterania", "Sirkum Pasifik", "Pegunungan Alpen", "Pegunungan Himalaya"],
+                    correct: 0,
+                    fact: "Sirkum Mediterania membentang dari Sumatra, Jawa, Nusa Tenggara hingga Banda."
+                },
+                {
+                    q: "Batas laut teritorial Indonesia ditarik dari garis pantai sejauh...",
+                    options: ["12 Mil Laut", "200 Mil Laut", "24 Mil Laut", "100 Mil Laut"],
+                    correct: 0,
+                    fact: "Batas 12 mil laut diakui internasional sebagai kedaulatan penuh negara pantai."
+                }
+            ]
+        };
+
+        // GAME STATE
+        let gameState = {
+            gameMode: 'vsBot', // 'vsBot' or 'vsPlayer'
+            category: 'astronomis',
+            level: 'cendekia', // 'pemula', 'cendekia', 'ahli'
+            
+            p1Score: 0,
+            p2Score: 0,
+            targetScore: 6,
+
+            p1CurrentQuestion: null,
+            p2CurrentQuestion: null,
+
+            p1QuestionsPool: [],
+            p2QuestionsPool: [],
+
+            botTimer: null,
+            botSpeedMs: 3500,
+            isGameOver: false
+        };
+
+        // DOM ELEMENTS
+        const pages = {
+            pageCategories: document.getElementById('pageCategories'),
+            pageLevels: document.getElementById('pageLevels'),
+            pageGameplay: document.getElementById('pageGameplay'),
+            pageVictory: document.getElementById('pageVictory')
+        };
+
+        function showPage(pageId) {
+            sfx.playTap();
+            Object.keys(pages).forEach(id => {
+                if (id === pageId) {
+                    pages[id].classList.remove('hidden');
+                } else {
+                    pages[id].classList.add('hidden');
+                }
+            });
+
+            const topModeBadge = document.getElementById('topModeBadge');
+            if (pageId === 'pageGameplay') {
+                topModeBadge.classList.remove('hidden');
+                topModeBadge.innerText = `IPS • ${gameState.category.toUpperCase()} • ${gameState.level.toUpperCase()}`;
+            } else {
+                topModeBadge.classList.add('hidden');
+            }
+        }
+
+        function setGameMode(mode) {
+            sfx.playTap();
+            gameState.gameMode = mode;
+            const btnVsBot = document.getElementById('btnVsBot');
+            const btnVsPlayer = document.getElementById('btnVsPlayer');
+
+            if (mode === 'vsBot') {
+                btnVsBot.className = 'flex-1 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-amber-400 text-slate-900 shadow-md';
+                btnVsPlayer.className = 'flex-1 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-white hover:text-amber-300';
+            } else {
+                btnVsPlayer.className = 'flex-1 py-2 rounded-xl text-xs sm:text-sm font-black transition-all bg-amber-400 text-slate-900 shadow-md';
+                btnVsBot.className = 'flex-1 py-2 rounded-xl text-xs sm:text-sm font-black transition-all text-white hover:text-amber-300';
+            }
+        }
+
+        function selectCategory(cat) {
+            gameState.category = cat;
+            const catNames = {
+                astronomis: 'Letak Astronomis',
+                geografis: 'Letak Geografis',
+                geologis: 'Letak Geologis & Laut',
+                campuran: 'Semua Topik (Acak)'
+            };
+            document.getElementById('lblSelectedCat').innerText = catNames[cat];
+            showPage('pageLevels');
+        }
+
+        function selectLevel(lvl) {
+            gameState.level = lvl;
+            if (lvl === 'pemula') gameState.botSpeedMs = 5000;
+            if (lvl === 'cendekia') gameState.botSpeedMs = 3500;
+            if (lvl === 'ahli') gameState.botSpeedMs = 2500;
+
+            startNewGame();
+        }
+
+        function getQuestionsPool(cat) {
+            let pool = [];
+            if (cat === 'campuran') {
+                pool = [
+                    ...ipsDatabase.astronomis,
+                    ...ipsDatabase.geografis,
+                    ...ipsDatabase.geologis
+                ];
+            } else {
+                pool = [...ipsDatabase[cat]];
+            }
+            // Shuffle pool
+            return pool.sort(() => Math.random() - 0.5);
+        }
+
+        function startNewGame() {
+            gameState.p1Score = 0;
+            gameState.p2Score = 0;
+            gameState.isGameOver = false;
+
+            if (gameState.botTimer) clearTimeout(gameState.botTimer);
+
+            gameState.p1QuestionsPool = getQuestionsPool(gameState.category);
+            gameState.p2QuestionsPool = getQuestionsPool(gameState.category);
+
+            // Configure UI for VS Bot or VS Player
+            const p2OptionsContainer = document.getElementById('p2OptionsContainer');
+            const botOverlay = document.getElementById('botOverlay');
+            const p2BadgeTitle = document.getElementById('p2BadgeTitle');
+            const lblP2Tag = document.getElementById('lblP2Tag');
+
+            if (gameState.gameMode === 'vsBot') {
+                p2OptionsContainer.classList.add('hidden');
+                botOverlay.classList.remove('hidden');
+                p2BadgeTitle.innerHTML = '🤖 BOT SISWA AI';
+                lblP2Tag.innerText = 'BOT';
+            } else {
+                p2OptionsContainer.classList.remove('hidden');
+                botOverlay.classList.add('hidden');
+                p2BadgeTitle.innerHTML = '🔵 PEMAIN 2';
+                lblP2Tag.innerText = 'P2';
+            }
+
+            // Hide Fact banners initially
+            document.getElementById('p1EduFact').classList.add('hidden');
+            document.getElementById('p2EduFact').classList.add('hidden');
+
+            // Render Questions
+            renderNextQuestion(1);
+            renderNextQuestion(2);
+
+            // Reset Climber Positions
+            updateClimberPosition(1);
+            updateClimberPosition(2);
+
+            showPage('pageGameplay');
+
+            if (gameState.gameMode === 'vsBot') {
+                scheduleBotTurn();
+            }
+        }
+
+        function renderNextQuestion(playerNum) {
+            const pool = playerNum === 1 ? gameState.p1QuestionsPool : gameState.p2QuestionsPool;
+            if (pool.length === 0) {
+                // refill pool if exhausted
+                if (playerNum === 1) gameState.p1QuestionsPool = getQuestionsPool(gameState.category);
+                else gameState.p2QuestionsPool = getQuestionsPool(gameState.category);
+            }
+
+            const questionObj = (playerNum === 1 ? gameState.p1QuestionsPool : gameState.p2QuestionsPool).pop();
+
+            if (playerNum === 1) {
+                gameState.p1CurrentQuestion = questionObj;
+                document.getElementById('p1QuestionText').innerText = questionObj.q;
+                renderOptionButtons(1, questionObj);
+            } else {
+                gameState.p2CurrentQuestion = questionObj;
+                document.getElementById('p2QuestionText').innerText = questionObj.q;
+                if (gameState.gameMode === 'vsPlayer') {
+                    renderOptionButtons(2, questionObj);
+                }
+            }
+        }
+
+        function renderOptionButtons(playerNum, qObj) {
+            const container = document.getElementById(playerNum === 1 ? 'p1OptionsContainer' : 'p2OptionsContainer');
+            container.innerHTML = '';
+
+            const labels = ['A', 'B', 'C', 'D'];
+            qObj.options.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `btn-press w-full text-left p-2.5 sm:p-3 rounded-xl border text-xs sm:text-sm font-bold transition-all shadow-sm flex items-start gap-2 bg-white hover:bg-slate-50 text-slate-700 border-slate-200`;
+                btn.innerHTML = `<span class="bg-slate-200 text-slate-800 rounded-lg px-2 py-0.5 text-xs font-black uppercase">${labels[idx]}</span> <span>${optText}</span>`;
+                btn.onclick = () => handleAnswerSelect(playerNum, idx);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleAnswerSelect(playerNum, selectedIdx) {
+            if (gameState.isGameOver) return;
+
+            sfx.playTap();
+
+            const qObj = playerNum === 1 ? gameState.p1CurrentQuestion : gameState.p2CurrentQuestion;
+            const factBox = document.getElementById(playerNum === 1 ? 'p1EduFact' : 'p2EduFact');
+            const factText = document.getElementById(playerNum === 1 ? 'p1FactText' : 'p2FactText');
+
+            if (selectedIdx === qObj.correct) {
+                // Correct Answer
+                sfx.playCorrect();
+                if (playerNum === 1) gameState.p1Score++;
+                else gameState.p2Score++;
+
+                updateClimberPosition(playerNum);
+
+                // Show Edu Fact
+                factText.innerText = qObj.fact;
+                factBox.classList.remove('hidden');
+
+                if ((playerNum === 1 && gameState.p1Score >= gameState.targetScore) ||
+                    (playerNum === 2 && gameState.p2Score >= gameState.targetScore)) {
+                    handleVictory(playerNum);
+                    return;
+                }
+
+                // Render Next after slight delay
+                setTimeout(() => {
+                    renderNextQuestion(playerNum);
+                    if (playerNum === 2 && gameState.gameMode === 'vsBot') {
+                        scheduleBotTurn();
+                    }
+                }, 1200);
+
+            } else {
+                // Wrong Answer
+                sfx.playWrong();
+                factText.innerText = `Kurang tepat! ${qObj.fact}`;
+                factBox.classList.remove('hidden');
+
+                // Render Next question
+                setTimeout(() => {
+                    renderNextQuestion(playerNum);
+                    if (playerNum === 2 && gameState.gameMode === 'vsBot') {
+                        scheduleBotTurn();
+                    }
+                }, 1500);
+            }
+        }
+
+        function updateClimberPosition(playerNum) {
+            const score = playerNum === 1 ? gameState.p1Score : gameState.p2Score;
+            const climber = document.getElementById(playerNum === 1 ? 'climberP1' : 'climberP2');
+            const counter = document.getElementById(playerNum === 1 ? 'p1Counter' : 'p2Counter');
+
+            // 220px height over 6 steps -> ~36.6px per step
+            const pxStep = 36.6;
+            const newBottom = score * pxStep;
+            climber.style.bottom = `${newBottom}px`;
+
+            climber.classList.remove('climb-anim');
+            void climber.offsetWidth;
+            climber.classList.add('climb-anim');
+
+            counter.innerText = `${score}/6`;
+        }
+
+        // BOT AI LOGIC
+        function scheduleBotTurn() {
+            if (gameState.isGameOver || gameState.gameMode !== 'vsBot') return;
+
+            const botStatus = document.getElementById('botStatusText');
+            botStatus.innerText = "🤖 Sedang membaca peta & soal IPS...";
+
+            let delay = gameState.botSpeedMs + (Math.random() * 800 - 400);
+
+            gameState.botTimer = setTimeout(() => {
+                if (gameState.isGameOver) return;
+
+                // 80% chance Bot answers correctly
+                const qObj = gameState.p2CurrentQuestion;
+                const isCorrect = Math.random() < 0.80;
+                let chosenIdx = qObj.correct;
+
+                if (!isCorrect) {
+                    chosenIdx = (qObj.correct + 1) % qObj.options.length;
+                }
+
+                handleAnswerSelect(2, chosenIdx);
+
+            }, delay);
+        }
+
+        // VICTORY & GAME OVER
+        function handleVictory(winnerNum) {
+            gameState.isGameOver = true;
+            sfx.playWin();
+
+            if (gameState.botTimer) clearTimeout(gameState.botTimer);
+
+            const victoryTitle = document.getElementById('victoryTitle');
+            const victorySubtitle = document.getElementById('victorySubtitle');
+            const victoryIcon = document.getElementById('victoryIcon');
+
+            if (winnerNum === 1) {
+                victoryTitle.innerText = "PEMAIN 1 MENANG! 🎉";
+                victorySubtitle.innerText = "Luar biasa! Kamu berhasil memanjat puncak tiang dan menguasai IPS Indonesia!";
+                victoryIcon.innerText = "🏆";
+            } else {
+                if (gameState.gameMode === 'vsBot') {
+                    victoryTitle.innerText = "BOT SISWA AI MENANG! 🤖";
+                    victorySubtitle.innerText = "Bot AI berhasil memanjat duluan. Coba lagi dan kalahkan Bot AI!";
+                    victoryIcon.innerText = "🚀";
+                } else {
+                    victoryTitle.innerText = "PEMAIN 2 MENANG! 🎉";
+                    victorySubtitle.innerText = "Pemain 2 berhasil merebut bendera & piala di puncak tiang!";
+                    victoryIcon.innerText = "🏆";
+                }
+            }
+
+            document.getElementById('finalScoreP1').innerText = `${gameState.p1Score}/6`;
+            document.getElementById('finalScoreP2').innerText = `${gameState.p2Score}/6`;
+
+            showPage('pageVictory');
+
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 110,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+
+        function restartGame() {
+            startNewGame();
+        }
+    </script>
+</body>
+</html>
